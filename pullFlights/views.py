@@ -36,7 +36,7 @@ def scrape(request):
 
     # Here, we just load more and more results on a page.
     # Technically, we can do it any number of times
-    for i in range(5):
+    for i in range(1):
         try:
             more_btn = driver.find_element(By.XPATH, "//a[contains(text(), 'Show more results')]")
             more_btn.click()
@@ -47,6 +47,7 @@ def scrape(request):
     # Now, "souping" the data
     soup=BeautifulSoup(driver.page_source, 'lxml')
 
+    # Gets the time of a departure
     deptimes = soup.find_all('span', attrs={'class': 'depart-time base-time'})
 
     # These are ALL of the meridiems. Have to split them for
@@ -55,21 +56,22 @@ def scrape(request):
     mer_dept = meridiem[::2]
     mer_arr = meridiem[1::2]
 
-
-
+    # Gets the time of the arrival, number of stops, company, and the price
     arrtimes = soup.find_all('span', attrs={'class': 'arrival-time base-time'})
     stops = soup.find_all('span', attrs={'class': 'stops-text'})
     prices = soup.find_all('span', attrs={'class': 'price-text'})
-
+    company = soup.find_all('div', attrs={'class': 'bottom'})
 
     data = {} 
     counter = 0
-    for dep, arriv, stps, price, mr_1, mr_2 in zip(deptimes, arrtimes, stops, prices, mer_dept, mer_arr):
+    for dep, arriv, stps, price, mr_1, mr_2, comp in zip(deptimes, arrtimes, stops, prices, mer_dept, mer_arr, company[::3]):
         array = []
         array.append(dep.string + ' ' + mr_1.string)
         array.append(arriv.string + ' ' + mr_2.string)
-        array.append(stps.string[1:])
-        array.append(price.string[1:])
+        array.append(stps.string.strip())
+        array.append(price.string.strip())
+        array.append(comp.string.strip())
+
         data[counter] = array 
         counter += 1
     
