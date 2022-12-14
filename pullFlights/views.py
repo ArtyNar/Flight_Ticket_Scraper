@@ -13,75 +13,78 @@ from time import sleep
 
 # Our scraper!
 def scrape(request):
-    # User input about a desired flight
-    origin = "SLC"
-    destination = "LAX"
-    startdate = "2023-01-06"
-    #enddate = "2023-01-09"
+    if request.method == 'POST':
+        origin = request.POST.get('departure', '')
+        destination = request.POST.get('destination', '')
+        startdate = request.POST.get('startdate', '')
 
-    # Assembling the url
-    url = "https://www.kayak.com/flights/" + origin + "-" + destination + "/" + startdate # + "/" + enddate
-    
-    # Loading the selenium driver.
-    # It will open a chorme page, that will accomplish the scraping
-    chrome_options = webdriver.ChromeOptions()
-    driver = webdriver.Chrome("chromedriver.exe")
-    driver.implicitly_wait(20)
-    driver.get(url)
-    
-    # From what I udnerstand, it allows the page to load before we proceed
-    # I might be wrong though
-    sleep(2)
+        #enddate = "2023-01-09"
 
+        # # Assembling the url
+        url = "https://www.kayak.com/flights/" + origin + "-" + destination + "/" + startdate # + "/" + enddate
+        
+        # Loading the selenium driver.
+        # It will open a chorme page, that will accomplish the scraping
+        chrome_options = webdriver.ChromeOptions()
+        driver = webdriver.Chrome("chromedriver.exe")
+        driver.implicitly_wait(20)
+        driver.get(url)
+        
+        # From what I udnerstand, it allows the page to load before we proceed
+        # I might be wrong though
+        # sleep(2)
 
-    # Here, we just load more and more results on a page.
-    # Technically, we can do it any number of times
-    for i in range(1):
-        try:
-            more_btn = driver.find_element(By.XPATH, "//a[contains(text(), 'Show more results')]")
-            more_btn.click()
-            sleep(2)
-        except:
-            continue
+        # Here, we just load more and more results on a page.
+        # Technically, we can do it any number of times
+        for _ in range(1):
+            try:
+                more_btn = driver.find_element(By.XPATH, "//a[contains(text(), 'Show more results')]")
+                more_btn.click()
+                sleep(2)
+            except:
+                continue
 
-    # Now, "souping" the data
-    soup=BeautifulSoup(driver.page_source, 'lxml')
+        # Now, "souping" the data
+        soup=BeautifulSoup(driver.page_source, 'lxml')
 
-    # Gets the time of a departure
-    deptimes = soup.find_all('span', attrs={'class': 'depart-time base-time'})
+        # Gets the time of a departure
+        deptimes = soup.find_all('span', attrs={'class': 'depart-time base-time'})
 
-    # These are ALL of the meridiems. Have to split them for
-    # the ones corresponding to departures and ones to arrivals
-    meridiem = soup.find_all('span', attrs={'class': 'time-meridiem meridiem'})
-    mer_dept = meridiem[::2]
-    mer_arr = meridiem[1::2]
+        # These are ALL of the meridiems. Have to split them for
+        # the ones corresponding to departures and ones to arrivals
+        meridiem = soup.find_all('span', attrs={'class': 'time-meridiem meridiem'})
+        mer_dept = meridiem[::2]
+        mer_arr = meridiem[1::2]
 
-    # Gets the time of the arrival, number of stops, company, and the price
-    arrtimes = soup.find_all('span', attrs={'class': 'arrival-time base-time'})
-    stops = soup.find_all('span', attrs={'class': 'stops-text'})
-    prices = soup.find_all('span', attrs={'class': 'price-text'})
-    company = soup.find_all('div', attrs={'class': 'bottom'})
+        # Gets the time of the arrival, number of stops, company, and the price
+        arrtimes = soup.find_all('span', attrs={'class': 'arrival-time base-time'})
+        stops = soup.find_all('span', attrs={'class': 'stops-text'})
+        prices = soup.find_all('span', attrs={'class': 'price-text'})
+        company = soup.find_all('div', attrs={'class': 'bottom'})
 
-    data = {} 
-    counter = 0
-    for dep, arriv, stps, price, mr_1, mr_2, comp in zip(deptimes, arrtimes, stops, prices, mer_dept, mer_arr, company[::3]):
-        array = []
-        array.append(dep.string + ' ' + mr_1.string)
-        array.append(arriv.string + ' ' + mr_2.string)
-        array.append(stps.string.strip())
-        array.append(price.string.strip())
-        array.append(comp.string.strip())
+        # Our data will be contained here 
+        data = []
 
-        data[counter] = array 
-        counter += 1
-    
-    # data = {}
+        # Used for ids
+        counter = 1
+        for dep, arriv, stps, price, mr_1, mr_2, comp in zip(deptimes, arrtimes, stops, prices, mer_dept, mer_arr, company[::3]):
+            # Creating a dictionary for each entry
+            inner_dict = {}
 
-    # for link in soup.find_all('a'):
-    #     link_address = link.get('href')
-    #     link_text = link.string
-    #     data[link_text] = link_address
+            # Grabbing the data, distributing it into a dictionary
+            inner_dict['id'] = counter
+            inner_dict['departure'] = dep.string + ' ' + mr_1.string
+            inner_dict['arrival'] = arriv.string + ' ' + mr_2.string
+            inner_dict['stops'] = stps.string.strip()
+            inner_dict['price'] = price.string.strip()
+            inner_dict['company'] = comp.string.strip()
 
-    # data = soup.get_text()
-    # data = soup
-    return render(request, 'pullFlights/result.html', {'data':data})
+            # Appending everything to a data array
+            data.append(inner_dict) 
+            
+            # Used for assigning id's to data points
+            counter += 1
+
+        return render(request, 'pullFlights/result.html', {'data':data})
+    else:
+        return render(request, 'pullFlights/result.html', {})
