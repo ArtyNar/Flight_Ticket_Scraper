@@ -30,10 +30,6 @@ def scrape(request):
         driver.implicitly_wait(20)
         driver.get(url)
         
-        # From what I udnerstand, it allows the page to load before we proceed
-        # I might be wrong though
-        # sleep(2)
-
         # Here, we just load more and more results on a page.
         # Technically, we can do it any number of times
         for _ in range(1):
@@ -65,6 +61,9 @@ def scrape(request):
         # Our data will be contained here 
         data = []
 
+        # Used for displaying a histogram
+        prices_arr = []
+
         # Used for ids
         counter = 1
         for dep, arriv, stps, price, mr_1, mr_2, comp in zip(deptimes, arrtimes, stops, prices, mer_dept, mer_arr, company[::3]):
@@ -79,12 +78,18 @@ def scrape(request):
             inner_dict['price'] = price.string.strip()
             inner_dict['company'] = comp.string.strip()
 
+            # Used for displaying a histogram
+            # Puts all the prices in a correct format
+            data_point = [f"{counter} {comp.string.strip()}",
+                          price.string.strip().strip('$')]
+            prices_arr.append(data_point)
+
             # Appending everything to a data array
             data.append(inner_dict) 
             
             # Used for assigning id's to data points
             counter += 1
 
-        return render(request, 'pullFlights/result.html', {'data':data})
+        return render(request, 'pullFlights/result.html', {'data':data, 'prices':prices_arr})
     else:
         return render(request, 'pullFlights/result.html', {})
