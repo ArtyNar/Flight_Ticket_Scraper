@@ -35,7 +35,7 @@ def scrape(request):
         
         # Here, we just load more and more results on a page.
         # Technically, we can do it any number of times
-        for _ in range(1):
+        for _ in range(5):
             try:
                 more_btn = driver.find_element(By.XPATH, "//a[contains(text(), 'Show more results')]")
                 more_btn.click()
