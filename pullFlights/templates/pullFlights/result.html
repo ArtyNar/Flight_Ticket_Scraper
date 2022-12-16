@@ -26,6 +26,7 @@
         }
       </script>
       {% endif %}
+
       <style>
         .top
         {
@@ -43,12 +44,22 @@
             font-weight: 500;
             color: rgb(40, 36, 28);
         }
-        button
+        .btn-primary
         {
-            background-color: #f5a623 !important;
+            background-color: #ffaa21 !important;
             color: rgb(40, 36, 28) !important;
             border-color: #f7c16a !important;
             font-weight: 500 !important;
+        }
+        .btn-light
+        {
+            background-color: #ffffff !important; 
+            color: #797979;
+            font-weight: 500 !important;
+        }
+        .alert-warning
+        {
+            background-color: #ffe0ae;
         }
       </style>
 </head>
@@ -70,28 +81,87 @@
                 {% csrf_token %}
                 <div class="row">
                     <div class="col">
-                        <input type="text" class="form-control" name="departure" id="from" placeholder="Departure"></input>
+                        <input type="text" class="form-control" name="departure" id="from" placeholder="Departure" required></input>
                     </div>
                     <div class="col">
-                        <input type="text" class="form-control" name="destination" id="from" placeholder="Destination"></input>
+                        <input type="text" class="form-control" name="destination" id="from" placeholder="Destination" required></input>
                     </div>
                     <div class="col">
-                        <input type="date" name="startdate" id="startdate" class="form-control">
+                        <input type="date" name="startdate" id="startdate" class="form-control" required>
                     </div>
                 </div>
                 <button class="btn btn-primary mt-2 mb-2" type="submit">Search</button>
+                <a href="{% url 'codes' %}" class="btn btn-light mt-2 mb-2" tabindex="-1" role="button" aria-disabled="true">See airport codes</a>
             </form>
         </div>
     </div>
+    <!-- ============================================================== -->
+    {% if data %}
     <div class="container">
         <div class="mx-auto w-75">
-            <div id="chart_div" style="width: 100%; height: 200px;"></div>
-            <ul class="list-group">
-                {% for entry in data %}
-                <li class="list-group-item">{{entry}}</li>
-                {% endfor %}
-            </ul>
+            <div class="row">
+                <div id="chart_div" class="col" style="height: 300px;"></div>
+                <table class="table col-sm-1" style="width: 20%;">
+                    <thead>
+                        <tr>
+                            <th scope="col">Average price</th>
+                            <th scope="col">Least expensive</th>
+                            <th scope="col">Most expensive</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${{stats.average}}</td>
+                            <td>${{stats.min}}</td>
+                            <td>${{stats.max}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <table class="table border" id="myTable">
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Comany</th>
+                    <th scope="col">Departure time</th>
+                    <th scope="col">Arrival time</th>
+                    <th scope="col"># of stops</th>
+                    <th scope="col">Ticket class</th>
+                    <th scope="col">Ticket cost</th>
+                    <th scope="col">Link</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for entry in data %}
+                    <tr>
+                        <td>{{entry.id}}</td>
+                        <td>{{entry.company}}</td>
+                        <td>{{entry.departure}}</td>
+                        <td>{{entry.arrival}}</td>
+                        <td>{{entry.stops}}</td>
+                        <td>{{entry.class}}</td>
+                        <td>{{entry.price}}</td>
+                        <td>
+                            <a href="https://www.kayak.com/{{entry.link}}" target="_blank" class="btn btn-primary" tabindex="-1" role="button" aria-disabled="true">Book flight</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+    {% elif empty %}
+    <div class="container mt-4">
+        <div class="alert alert-danger" role="alert">
+            Your input is incorrect or no flights are available for your dates.
+        </div>
+    </div>
+    {% else %}
+    <div class="container mt-4">
+        <div class="alert alert-warning" role="alert">
+            Your results will show up here!
+        </div>
+    </div>
+    {% endif %}
 </body>
 </html>

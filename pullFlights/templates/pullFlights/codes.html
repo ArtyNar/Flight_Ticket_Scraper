@@ -1,0 +1,92 @@
+{% load tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <style>
+        .top
+        {
+            background-image: url('../../../media/wave.svg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: top;
+            background-size: 100% 40%;
+            background-color: #ffd592;
+        }
+        .btn-primary
+        {
+            background-color: #ffce7f !important;
+            color: rgb(40, 36, 28) !important;
+            border-color: #f7c16a !important;
+            font-weight: 500 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="top">
+        <div class="container w-50">
+            <div class="row w-75 p-4">
+                <div class="col-5">
+                    <input type="text" id="myInput" class="form-control" onkeyup="restartTimer()" placeholder="Type in airport name" title="Airport name">
+                </div>
+                <a href="{% url 'scrape' %}" class="btn btn-primary col-3" tabindex="-1" role="button" aria-disabled="true">Go back</a>
+            </div>
+        </div>
+    </div>
+    <div class="container w-50 mt-3">
+        <table class="table border" id="myTable">
+            <thead>
+              <tr>
+                <th scope="col">Airport name</th>
+                <th scope="col">Country code</th>
+                <th scope="col">Airport code</th>
+              </tr>
+            </thead>
+            <tbody>
+                {% for airport in airports %}
+                    <tr style="display: none;">
+                        <td>{{airport.name}}</td>
+                        <td>{{airport.country}}</td>
+                        <td>{{airport.code}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+            var timer = null;
+
+            function restartTimer() {
+                clearTimeout(timer);
+                timer = setTimeout(search, 200);
+            }
+            function search() {
+              var input, filter, table, tr, td, i, txtValue;
+              input = document.getElementById("myInput");            
+              filter = input.value.toUpperCase(); 
+              table = document.getElementById("myTable");
+
+
+              tr = table.getElementsByTagName("tr");
+              for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0];
+                
+                if (td) {
+                  txtValue = td.textContent || td.innerText;
+                  if (txtValue.toUpperCase().indexOf(filter) > -1 && filter != "") {
+                    tr[i].style.display = "";
+                  } else {
+                    tr[i].style.display = "none";
+                  }
+                }   
+              }
+            }
+        </script>
+    </div>
+</body>
+</html>
